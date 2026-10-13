@@ -1,6 +1,7 @@
 import os
-from pyspark.sql import SparkSession
+
 import yfinance as yf
+from pyspark.sql import SparkSession
 
 
 def main():
