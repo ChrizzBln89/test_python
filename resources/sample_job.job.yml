@@ -1,0 +1,79 @@
+# A sample job for test_python.
+
+resources:
+
+  x-common-env: &common_env
+    LANDING_PATH: "/Volumes/${var.catalog}/${resources.schemas.dev.name}/${resources.volumes.dev_volume.name}"
+    TARGET_CATALOG: "${var.catalog}"
+    TARGET_SCHEMA: "${resources.schemas.dev.name}"
+
+  volumes:
+    dev_volume:
+      schema_name: "${resources.schemas.dev.name}"
+      name: "landing"
+      catalog_name: "${var.catalog}"
+
+  schemas:
+    dev:
+     name: "test"
+     catalog_name: "${var.catalog}"
+
+  jobs:
+    sample_job:
+      name: sample_job
+
+      trigger:
+        # Run this job every day, exactly one day from the last run; see https://docs.databricks.com/api/workspace/jobs/create#trigger
+        periodic:
+          interval: 1
+          unit: DAYS
+
+      #email_notifications:
+      #  on_failure:
+      #    - your_email@example.com
+
+      environment_variables:
+        - environment_variables_key: common
+          spec:
+            variables: *common_env
+
+      tasks:
+
+        - task_key: notebook_task
+          notebook_task:
+            notebook_path: ../src/sample_notebook.ipynb
+            
+        - task_key: test_environment_variables
+          spark_python_task:
+            python_file: ../src/ingest.py
+          depends_on:
+            - task_key: notebook_task
+          environment_key: default
+          environment_variables_key: common
+          
+          
+          
+        - task_key: python_wheel_task
+          depends_on:
+            - task_key: notebook_task
+          python_wheel_task:
+            package_name: test_python
+            entry_point: main
+          environment_key: default
+          environment_variables_key: common
+        - task_key: refresh_pipeline
+          depends_on:
+            - task_key: notebook_task
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.test_python_etl.id}
+            
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "5"
+            dependencies:
+              # By default we just include the .whl file generated for the test_python package.
+              # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
+              # for more information on how to add other libraries.
+              - ../dist/*.whl

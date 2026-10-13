@@ -1,0 +1,27 @@
+[project]
+name = "test_python"
+version = "0.0.1"
+authors = [{ name = "christophbieritz1989@gmail.com" }]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "yfinance>=0.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+    "databricks-dlt",
+    "databricks-connect>=16.4,<16.5",
+    "ipykernel",
+]
+
+[project.scripts]
+main = "test_python.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 120
