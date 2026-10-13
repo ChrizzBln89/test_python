@@ -33,9 +33,9 @@ resources:
       #    - your_email@example.com
 
       environment_variables:
-        - environment_variables_key: common
-          spec:
-            variables: *common_env
+        LANDING_PATH: "/Volumes/${var.catalog}/${resources.schemas.dev.name}/${resources.volumes.dev_volume.name}"
+        TARGET_CATALOG: "${var.catalog}"
+        TARGET_SCHEMA: "${resources.schemas.dev.name}"
 
       tasks:
 
@@ -44,7 +44,6 @@ resources:
             package_name: test_python
             entry_point: main
           environment_key: default
-          environment_variables_key: common
 
         - task_key: refresh_pipeline
           depends_on:
