@@ -2,11 +2,6 @@
 
 resources:
 
-  x-common-env: &common_env
-    LANDING_PATH: "/Volumes/${var.catalog}/${resources.schemas.dev.name}/${resources.volumes.dev_volume.name}"
-    TARGET_CATALOG: "${var.catalog}"
-    TARGET_SCHEMA: "${resources.schemas.dev.name}"
-
   pipelines:
     test_python_etl:
       name: test_python_etl
@@ -14,7 +9,9 @@ resources:
       schema: ${var.schema}
       serverless: true
       root_path: "../src/test_python_etl"
-      configuration: *common_env
+      configuration:
+        TARGET_CATALOG: "${var.catalog}"
+        TARGET_SCHEMA: "${var.schema}"
 
       libraries:
         - glob:
@@ -22,6 +19,4 @@ resources:
 
       environment:
         dependencies:
-          # We include every dependency defined by pyproject.toml by defining an editable environment
-          # that points to the folder where pyproject.toml is deployed.
           - --editable ${workspace.file_path}

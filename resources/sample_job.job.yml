@@ -2,47 +2,25 @@
 
 resources:
 
-  x-common-env: &common_env
-    LANDING_PATH: "/Volumes/${var.catalog}/${resources.schemas.dev.name}/${resources.volumes.dev_volume.name}"
-    TARGET_CATALOG: "${var.catalog}"
-    TARGET_SCHEMA: "${resources.schemas.dev.name}"
-
-  volumes:
-    dev_volume:
-      schema_name: "${resources.schemas.dev.name}"
-      name: "landing"
-      catalog_name: "${var.catalog}"
-
   schemas:
     dev:
-     name: "test"
-     catalog_name: "${var.catalog}"
+      name: "test"
+      catalog_name: "${var.catalog}"
 
   jobs:
     sample_job:
       name: sample_job
 
-      trigger:
-        # Run this job every day, exactly one day from the last run; see https://docs.databricks.com/api/workspace/jobs/create#trigger
-        periodic:
-          interval: 1
-          unit: DAYS
-
-      #email_notifications:
-      #  on_failure:
-      #    - your_email@example.com
-
-      environment_variables:
-        LANDING_PATH: "/Volumes/${var.catalog}/${resources.schemas.dev.name}/${resources.volumes.dev_volume.name}"
-        TARGET_CATALOG: "${var.catalog}"
-        TARGET_SCHEMA: "${resources.schemas.dev.name}"
-
       tasks:
-
         - task_key: python_wheel_task
           python_wheel_task:
             package_name: test_python
             entry_point: main
+            parameters:
+              - "--catalog"
+              - "${var.catalog}"
+              - "--schema"
+              - "${resources.schemas.dev.name}"
           environment_key: default
 
         - task_key: refresh_pipeline
@@ -50,14 +28,10 @@ resources:
             - task_key: python_wheel_task
           pipeline_task:
             pipeline_id: ${resources.pipelines.test_python_etl.id}
-            
 
       environments:
         - environment_key: default
           spec:
             environment_version: "5"
             dependencies:
-              # By default we just include the .whl file generated for the test_python package.
-              # See https://docs.databricks.com/dev-tools/bundles/library-dependencies.html
-              # for more information on how to add other libraries.
               - ../dist/*.whl
